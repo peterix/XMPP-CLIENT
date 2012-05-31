@@ -15,6 +15,8 @@ import javax.swing.ToolTipManager;
 import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
 import javax.swing.tree.TreePath;
+import org.jivesoftware.smack.Roster;
+import org.jivesoftware.smack.RosterEntry;
 
 /**
  *
@@ -47,11 +49,13 @@ public class MainWindow extends javax.swing.JFrame implements ClConnectionListen
                 {
                     removeContact.setEnabled(true);
                     historyView.setEnabled(true);
+                    renameContact.setEnabled(true);
                 }
                 else
                 {
                     removeContact.setEnabled(false);
                     historyView.setEnabled(false);
+                    renameContact.setEnabled(false);
                 }
             }
         });
@@ -129,6 +133,7 @@ public class MainWindow extends javax.swing.JFrame implements ClConnectionListen
         openAddUser = new javax.swing.JButton();
         removeContact = new javax.swing.JButton();
         historyView = new javax.swing.JButton();
+        renameContact = new javax.swing.JButton();
         expandButton = new javax.swing.JButton();
         jScrollPane2 = new javax.swing.JScrollPane();
         ContactList = new org.dethware.xmpp.client.BetterJTree();
@@ -209,6 +214,20 @@ public class MainWindow extends javax.swing.JFrame implements ClConnectionListen
         });
         jToolBar2.add(historyView);
 
+        renameContact.setIcon(new javax.swing.ImageIcon(getClass().getResource("/org/dethware/xmpp/client/edit-rename.png"))); // NOI18N
+        renameContact.setToolTipText("View conversation history");
+        renameContact.setBorder(new javax.swing.border.SoftBevelBorder(javax.swing.border.BevelBorder.RAISED));
+        renameContact.setEnabled(false);
+        renameContact.setFocusable(false);
+        renameContact.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+        renameContact.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
+        renameContact.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                renameContactActionPerformed(evt);
+            }
+        });
+        jToolBar2.add(renameContact);
+
         expandButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/org/dethware/xmpp/client/layer-visible-on.png"))); // NOI18N
         expandButton.setToolTipText("Expand all groups");
         expandButton.setBorder(new javax.swing.border.SoftBevelBorder(javax.swing.border.BevelBorder.RAISED));
@@ -243,7 +262,7 @@ public class MainWindow extends javax.swing.JFrame implements ClConnectionListen
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jToolBar2, javax.swing.GroupLayout.DEFAULT_SIZE, 332, Short.MAX_VALUE)
+            .addComponent(jToolBar2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
             .addComponent(jScrollPane2)
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
@@ -354,13 +373,16 @@ public class MainWindow extends javax.swing.JFrame implements ClConnectionListen
         Object o = ContactList.getLastSelectedPathComponent();
         if(o instanceof Contact)
         {
-            if(!ContactManager.deleteContact((Contact) o))
-            {
-                JOptionPane.showMessageDialog(this,
-                "Unable to remove the selected contact.",
-                "Operation failed",
-                JOptionPane.WARNING_MESSAGE);
-            }
+            Contact c = (Contact) o;
+            int result = JOptionPane.showConfirmDialog(this, "Do you really want to remove contact " + c.getName() + "?", "Confirm removal", JOptionPane.OK_CANCEL_OPTION);
+            if(result == JOptionPane.OK_OPTION)
+                if(!ContactManager.deleteContact((Contact) o))
+                {
+                    JOptionPane.showMessageDialog(this,
+                    "Unable to remove the selected contact.",
+                    "Operation failed",
+                    JOptionPane.WARNING_MESSAGE);
+                }
         }
     }//GEN-LAST:event_removeContactActionPerformed
 
@@ -375,6 +397,22 @@ public class MainWindow extends javax.swing.JFrame implements ClConnectionListen
         }
     }//GEN-LAST:event_historyViewActionPerformed
 
+    private void renameContactActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_renameContactActionPerformed
+        Object o = ContactList.getLastSelectedPathComponent();
+        if(o instanceof Contact)
+        {
+            Contact c = (Contact) o;
+            String whatTheUserEntered = JOptionPane.showInputDialog(this, "Set new nickname for contact " + c.getJID() , c.getName());
+            if (whatTheUserEntered != null) {
+                whatTheUserEntered = whatTheUserEntered.trim();
+                if(whatTheUserEntered.isEmpty())
+                    return;
+                XMPPClient app = XMPPClient.globalInstance();
+                app.contacts_model.renameContact(c, whatTheUserEntered);
+            }
+        }
+    }//GEN-LAST:event_renameContactActionPerformed
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private org.dethware.xmpp.client.BetterJTree ContactList;
     private javax.swing.JTextField connectionBox;
@@ -387,6 +425,7 @@ public class MainWindow extends javax.swing.JFrame implements ClConnectionListen
     private javax.swing.JButton openAddUser;
     private javax.swing.JButton openSettings;
     private javax.swing.JButton removeContact;
+    private javax.swing.JButton renameContact;
     private javax.swing.JComboBox statusChooser;
     // End of variables declaration//GEN-END:variables
 

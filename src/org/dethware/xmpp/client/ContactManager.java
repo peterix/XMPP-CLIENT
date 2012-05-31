@@ -417,6 +417,16 @@ public class ContactManager implements TreeModel, RosterListener, ClConnectionLi
         }
     }
     
+    public synchronized void renameContact(Contact c, String newName)
+    {
+        XMPPClient app = XMPPClient.globalInstance();
+        Roster r = app.getConnection().getRoster();
+        RosterEntry re = r.getEntry(c.getJID());
+        re.setName(newName);
+        c.setName(newName);
+        fireContactUpdate(c);
+    }
+    
     public synchronized Contact getContact(String otherJID) {
         for(Contact c: contacts)
         {
