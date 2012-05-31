@@ -1,13 +1,9 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
+/**
+ * @author Petr Mrázek (xmraze03@stud.fit.vutbr.cz)
  */
 package org.dethware.xmpp.client;
 
-import org.jivesoftware.smack.RosterEntry;
 import org.jivesoftware.smack.packet.Presence;
-import org.jivesoftware.smack.packet.Presence.Type;
-import org.jivesoftware.smack.packet.RosterPacket;
 
 /**
  * enum for our and other user's presence status

@@ -1,6 +1,5 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
+/**
+ * @author Petr Mrázek (xmraze03@stud.fit.vutbr.cz)
  */
 package org.dethware.xmpp.client;
 
@@ -13,11 +12,6 @@ import org.jivesoftware.smack.MessageListener;
 import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smack.util.StringUtils;
 
-
-/**
- *
- * @author peterix
- */
 public class ConversationFactory implements ChatManagerListener, ClConnectionListener, MessageListener{
     private Map <String, Conversation> allConversations = new TreeMap<>();
     

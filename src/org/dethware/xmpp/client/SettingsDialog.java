@@ -1,24 +1,18 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
+/**
+ * @author Petr Mrázek (xmraze03@stud.fit.vutbr.cz)
  */
 package org.dethware.xmpp.client;
 
 import java.awt.Frame;
 import java.awt.event.MouseEvent;
 import java.io.File;
-import java.io.IOException;
-import javax.sound.sampled.*;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 import javax.swing.filechooser.FileFilter;
 import org.jivesoftware.smack.ConnectionConfiguration;
 import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.XMPPException;
-/**
- *
- * @author peterix
- */
+
 public class SettingsDialog extends javax.swing.JDialog {
 
     /**

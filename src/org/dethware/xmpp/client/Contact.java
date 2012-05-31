@@ -1,6 +1,5 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
+/**
+ * @author Petr Mrázek (xmraze03@stud.fit.vutbr.cz)
  */
 package org.dethware.xmpp.client;
 
@@ -11,10 +10,6 @@ import org.jivesoftware.smack.RosterGroup;
 import org.jivesoftware.smack.packet.RosterPacket;
 import org.jivesoftware.smack.util.StringUtils;
 
-/**
- *
- * @author peterix
- */
 public class Contact implements Comparable<Contact> {
     private String name;
     private String JID;

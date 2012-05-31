@@ -1,6 +1,5 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
+/**
+ * @author Petr Mrázek (xmraze03@stud.fit.vutbr.cz)
  */
 package org.dethware.xmpp.client;
 
@@ -15,10 +14,6 @@ import javax.swing.text.Style;
 import javax.swing.text.StyleConstants;
 import javax.swing.text.StyledDocument;
 
-/**
- *
- * @author peterix
- */
 public class HistoryWindow extends javax.swing.JFrame {
 
     private Conversation myConversation;

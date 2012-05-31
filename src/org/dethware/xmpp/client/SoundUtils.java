@@ -1,12 +1,10 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
+/**
+ * @author Petr Mrázek (xmraze03@stud.fit.vutbr.cz)
  */
 package org.dethware.xmpp.client;
 
 import java.io.File;
 import java.net.URL;
-import javax.sound.sampled.*;
 import kuusisto.tinysound.Sound;
 import kuusisto.tinysound.TinySound;
 
