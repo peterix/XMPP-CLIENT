@@ -9,7 +9,9 @@ import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import javax.swing.*;
-import org.jivesoftware.smack.RosterEntry;
+import javax.swing.event.TreeSelectionEvent;
+import javax.swing.event.TreeSelectionListener;
+import javax.swing.tree.TreePath;
 
 /**
  *
@@ -32,6 +34,22 @@ public class MainWindow extends javax.swing.JFrame implements ClConnectionListen
         AppSettings settings = cl.settings;
         ContactList.setCellRenderer(new ContactListCellRenderer());
         ContactList.setModel(cl.contacts_model);
+        ContactList.addTreeSelectionListener( new TreeSelectionListener() {
+
+            @Override
+            public void valueChanged(TreeSelectionEvent e) {
+                TreePath tp = e.getPath();
+                Object o =tp.getLastPathComponent();
+                if(o instanceof Contact)
+                {
+                    removeContact.setEnabled(true);
+                }
+                else
+                {
+                    removeContact.setEnabled(false);
+                }
+            }
+        });
         ToolTipManager ttm = ToolTipManager.sharedInstance();
         ttm.registerComponent(ContactList);
         // this actually causes the whole chain of listeners to fire and sets
@@ -102,7 +120,9 @@ public class MainWindow extends javax.swing.JFrame implements ClConnectionListen
 
         jToolBar2 = new javax.swing.JToolBar();
         openSettings = new javax.swing.JButton();
-        openAdd = new javax.swing.JButton();
+        openAddGroup = new javax.swing.JButton();
+        openAddUser = new javax.swing.JButton();
+        removeContact = new javax.swing.JButton();
         expandButton = new javax.swing.JButton();
         jScrollPane2 = new javax.swing.JScrollPane();
         ContactList = new org.dethware.xmpp.client.BetterJTree();
@@ -129,13 +149,45 @@ public class MainWindow extends javax.swing.JFrame implements ClConnectionListen
         jToolBar2.add(openSettings);
         openSettings.getAccessibleContext().setAccessibleName("Settings");
 
-        openAdd.setIcon(new javax.swing.ImageIcon(getClass().getResource("/org/dethware/xmpp/client/list-add-user.png"))); // NOI18N
-        openAdd.setToolTipText("Add a new contact");
-        openAdd.setBorder(new javax.swing.border.SoftBevelBorder(javax.swing.border.BevelBorder.RAISED));
-        openAdd.setFocusable(false);
-        openAdd.setHorizontalTextPosition(javax.swing.SwingConstants.RIGHT);
-        jToolBar2.add(openAdd);
-        openAdd.getAccessibleContext().setAccessibleName("Add");
+        openAddGroup.setIcon(new javax.swing.ImageIcon(getClass().getResource("/org/dethware/xmpp/client/user-group-new.png"))); // NOI18N
+        openAddGroup.setToolTipText("Add a new group");
+        openAddGroup.setBorder(new javax.swing.border.SoftBevelBorder(javax.swing.border.BevelBorder.RAISED));
+        openAddGroup.setFocusable(false);
+        openAddGroup.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+        openAddGroup.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
+        openAddGroup.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                openAddGroupActionPerformed(evt);
+            }
+        });
+        jToolBar2.add(openAddGroup);
+
+        openAddUser.setIcon(new javax.swing.ImageIcon(getClass().getResource("/org/dethware/xmpp/client/list-add-user.png"))); // NOI18N
+        openAddUser.setToolTipText("Add a new contact");
+        openAddUser.setBorder(new javax.swing.border.SoftBevelBorder(javax.swing.border.BevelBorder.RAISED));
+        openAddUser.setFocusable(false);
+        openAddUser.setHorizontalTextPosition(javax.swing.SwingConstants.RIGHT);
+        openAddUser.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                openAddUserActionPerformed(evt);
+            }
+        });
+        jToolBar2.add(openAddUser);
+        openAddUser.getAccessibleContext().setAccessibleName("Add");
+
+        removeContact.setIcon(new javax.swing.ImageIcon(getClass().getResource("/org/dethware/xmpp/client/list-remove-user.png"))); // NOI18N
+        removeContact.setToolTipText("Remove selected contact");
+        removeContact.setBorder(new javax.swing.border.SoftBevelBorder(javax.swing.border.BevelBorder.RAISED));
+        removeContact.setEnabled(false);
+        removeContact.setFocusable(false);
+        removeContact.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+        removeContact.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
+        removeContact.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                removeContactActionPerformed(evt);
+            }
+        });
+        jToolBar2.add(removeContact);
 
         expandButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/org/dethware/xmpp/client/layer-visible-on.png"))); // NOI18N
         expandButton.setToolTipText("Expand all groups");
@@ -268,6 +320,30 @@ public class MainWindow extends javax.swing.JFrame implements ClConnectionListen
         }
     }//GEN-LAST:event_expandButtonActionPerformed
 
+    private void openAddUserActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_openAddUserActionPerformed
+        AddUserDialog s = new AddUserDialog(this, true);
+        s.setVisible(true);
+    }//GEN-LAST:event_openAddUserActionPerformed
+
+    private void openAddGroupActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_openAddGroupActionPerformed
+        AddGroupDialog s = new AddGroupDialog(this, true);
+        s.setVisible(true);
+    }//GEN-LAST:event_openAddGroupActionPerformed
+
+    private void removeContactActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_removeContactActionPerformed
+        Object o = ContactList.getLastSelectedPathComponent();
+        if(o instanceof Contact)
+        {
+            if(!ContactManager.deleteContact((Contact) o))
+            {
+                JOptionPane.showMessageDialog(this,
+                "Unable to remove the selected contact.",
+                "Operation failed",
+                JOptionPane.WARNING_MESSAGE);
+            }
+        }
+    }//GEN-LAST:event_removeContactActionPerformed
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private org.dethware.xmpp.client.BetterJTree ContactList;
     private javax.swing.JTextField connectionBox;
@@ -275,8 +351,10 @@ public class MainWindow extends javax.swing.JFrame implements ClConnectionListen
     private javax.swing.JLabel jLabel1;
     private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JToolBar jToolBar2;
-    private javax.swing.JButton openAdd;
+    private javax.swing.JButton openAddGroup;
+    private javax.swing.JButton openAddUser;
     private javax.swing.JButton openSettings;
+    private javax.swing.JButton removeContact;
     private javax.swing.JComboBox statusChooser;
     // End of variables declaration//GEN-END:variables
 

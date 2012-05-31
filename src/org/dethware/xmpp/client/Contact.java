@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import org.jivesoftware.smack.RosterEntry;
 import org.jivesoftware.smack.RosterGroup;
+import org.jivesoftware.smack.packet.RosterPacket;
 import org.jivesoftware.smack.util.StringUtils;
 
 /**
@@ -20,6 +21,8 @@ public class Contact implements Comparable<Contact> {
     private UserStatus status;
     private String statusMesage;
     private ContactManager cm;
+    private RosterPacket.ItemStatus subStatus;
+    private RosterPacket.ItemType subType;
     public ArrayList <ContactGroup> groups = new ArrayList<>();
     Contact(ContactManager parent, RosterEntry re)
     {
@@ -48,6 +51,11 @@ public class Contact implements Comparable<Contact> {
         if(message != null)
             statusMesage = message;
     }
+    public void setSubStatus(RosterPacket.ItemType type, RosterPacket.ItemStatus status)
+    {
+        subStatus = status;
+        subType = type;
+    }
     // new nick is set
     public void setName(String newName)
     {
@@ -58,6 +66,14 @@ public class Contact implements Comparable<Contact> {
     {
         return status;
     }
+    public RosterPacket.ItemStatus getSubStatus()
+    {
+        return subStatus;
+    }
+    public RosterPacket.ItemType getSubType()
+    {
+        return subType;
+    }        
     public String getName()
     {
         return name;

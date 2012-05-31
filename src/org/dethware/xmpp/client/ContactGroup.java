@@ -51,7 +51,18 @@ public class ContactGroup {
         return name;
     }
 
-    int getIndexOf(Object child) {
+    public int getIndexOf(Object child) {
         return contacts.indexOf(child);
+    }
+    
+    @Override
+    public String toString()
+    {
+        return name;
+    }
+    
+    public boolean forgetContact(Contact c)
+    {
+        return contacts.remove(c);
     }
 }

@@ -6,6 +6,7 @@ import java.awt.Component;
 import javax.swing.ImageIcon;
 import javax.swing.JTree;
 import javax.swing.tree.DefaultTreeCellRenderer;
+import org.jivesoftware.smack.packet.RosterPacket;
 
 public class ContactListCellRenderer extends DefaultTreeCellRenderer {
     public static final ImageIcon CONTACT_CATEGORY_ICON = 
@@ -53,8 +54,23 @@ public class ContactListCellRenderer extends DefaultTreeCellRenderer {
             {
                     setText(contact.getName());
             }
-            setToolTipText("<html>JID: " + contact.getJID() + "<br />Status: " + contact.getStatus().toString() + "<br />Message:" + contact.getMessage() + "</html>");
-
+            StringBuilder tooltipBuilder = new StringBuilder();
+            tooltipBuilder.append("<html>").append("JID: ").append(contact.getJID()).append("<br />Status: ").append(contact.getStatus().toString()).append("<br />");
+            if(contact.getMessage() != null)
+                tooltipBuilder.append("Message:").append(contact.getMessage()).append("<br />");
+            tooltipBuilder.append("Subscription type: ").append(contact.getSubType().toString()).append("<br />");
+            RosterPacket.ItemStatus stat = contact.getSubStatus();
+            if(stat == RosterPacket.ItemStatus.SUBSCRIPTION_PENDING)
+            {
+                tooltipBuilder.append("Has requested to be subscribed.<br />");
+            }
+            else if (stat ==  RosterPacket.ItemStatus.UNSUBSCRIPTION_PENDING)
+            {
+                tooltipBuilder.append("Has requested to be unsubscribed.<br />");
+            }
+            tooltipBuilder.append("</html>");
+            setToolTipText(tooltipBuilder.toString());
+                    
             switch(contact.getStatus())
             {
                 case Available:

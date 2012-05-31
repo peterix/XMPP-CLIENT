@@ -1,6 +1,14 @@
 package org.dethware.xmpp.client;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.swing.ComboBoxModel;
+import javax.swing.event.ListDataEvent;
+import javax.swing.event.ListDataListener;
 import javax.swing.event.TreeModelEvent;
 import javax.swing.event.TreeModelListener;
 import javax.swing.tree.TreeModel;
@@ -21,14 +29,16 @@ class ContactRoot
 /**
  * Nothing much to see here, move along...
  **/
-public class ContactManager implements TreeModel, RosterListener, ClConnectionListener {
+public class ContactManager implements TreeModel, RosterListener, ClConnectionListener, ComboBoxModel<ContactGroup> {
     
     private List <TreeModelListener> treeListernerList = new CopyOnWriteArrayList<>();
+    private List <ListDataListener> groupListenerList = new CopyOnWriteArrayList<>();
     
     private ContactRoot root = new ContactRoot();
     private ArrayList <ContactGroup> groups = new ArrayList<>();
     private ArrayList <Contact> contacts = new ArrayList<>();
     ContactGroup unlisted;
+    String selectedGroupName = null;
     UserStatus oldStatus = UserStatus.Offline;
     
     private void fireTreeReload( boolean flush ){
@@ -40,6 +50,7 @@ public class ContactManager implements TreeModel, RosterListener, ClConnectionLi
         {
             l.treeStructureChanged(e);
         }
+        fireGroupsChanged();
     }
     
     private void fireContactUpdate(Contact c){
@@ -165,6 +176,8 @@ public class ContactManager implements TreeModel, RosterListener, ClConnectionLi
 
     @Override
     public synchronized void addTreeModelListener(TreeModelListener l) {
+        if(treeListernerList.contains(l))
+            return;
         treeListernerList.add(l);
         System.out.println("Added listener: " + l.hashCode());
     }
@@ -173,6 +186,7 @@ public class ContactManager implements TreeModel, RosterListener, ClConnectionLi
         treeListernerList.remove(l);
         System.out.println("Removed listener: " + l.hashCode());
     }
+    
     @Override
     public synchronized void entriesAdded(Collection<String> clctn) {
         XMPPConnection conn = XMPPClient.globalInstance().getConnection();
@@ -185,6 +199,7 @@ public class ContactManager implements TreeModel, RosterListener, ClConnectionLi
             Presence p = r.getPresence(e.getUser());
             Contact c = new Contact(this, e);
             c.setStatus(UserStatus.fromPresence(p),p.getStatus());
+            c.setSubStatus(e.getType(),e.getStatus());
             contacts.add(c);
             System.out.println(c.getName() + " added:");
             Collection <RosterGroup> grps = e.getGroups();
@@ -205,7 +220,10 @@ public class ContactManager implements TreeModel, RosterListener, ClConnectionLi
                 }
             }
         }
+        // add all the other groups, if any
+        //Collection <RosterGroup> allGroups r.getGroups()
         fireTreeReload(false);
+        fireGroupsChanged();
     }
 
     @Override
@@ -219,16 +237,46 @@ public class ContactManager implements TreeModel, RosterListener, ClConnectionLi
             RosterEntry e = r.getEntry(entry);
             Contact c = getContact(entry);
             c.setName(e.getName());
+            c.setSubStatus(e.getType(),e.getStatus());
             fireContactUpdate(c);
         }
+        fireGroupsChanged();
     }
 
+    // remove the specified Contact from all ContactGroups. if the groups end up empty, remove the ContactGroups.
+    private void forgetContact(Contact c)
+    {
+        contacts.remove(c);
+        List <ContactGroup> toRemove = new ArrayList<>();
+        for(ContactGroup grp: c.groups)
+        {
+            grp.forgetContact(c);
+            if(grp.getNum() == 0)
+            {
+                groups.remove(grp);
+                toRemove.add(grp);
+            }
+        }
+        for(ContactGroup remove:toRemove)
+        {
+            // preserve the unlisted group always
+            if(remove != unlisted)
+                groups.remove(remove);
+        }
+    }
+    
     @Override
     public synchronized void entriesDeleted(Collection<String> clctn) {
+        XMPPConnection conn = XMPPClient.globalInstance().getConnection();
+        Roster r = conn.getRoster();
         for(String entry: clctn)
         {
-            System.out.println("Deleted: " + entry);
+            Contact c = getContact(entry);
+            if(c != null)
+                forgetContact(c);
         }
+        fireTreeReload(false);
+        fireGroupsChanged();
     }
 
     @Override
@@ -237,7 +285,6 @@ public class ContactManager implements TreeModel, RosterListener, ClConnectionLi
         user = StringUtils.parseBareAddress(user);
         UserStatus st = UserStatus.fromPresence(prsnc);
         XMPPConnection conn = XMPPClient.globalInstance().getConnection();
-        System.out.println(user + " changed X status to " + st.toString());
         if(!conn.isConnected())
             return;
         Roster r = conn.getRoster();
@@ -250,7 +297,6 @@ public class ContactManager implements TreeModel, RosterListener, ClConnectionLi
         else
         {
             UserStatus st2 = UserStatus.fromPresence(bestPresence);
-            System.out.println(c.getName() + " changed status to " + st2.toString());
             XMPPClient app = XMPPClient.globalInstance();
             // going online
             if(c.getStatus() == UserStatus.Offline && st2 != UserStatus.Offline)
@@ -300,6 +346,77 @@ public class ContactManager implements TreeModel, RosterListener, ClConnectionLi
         oldStatus = status;
     }
 
+    public boolean createNewGroup( String group )
+    {
+        if(getGroup(group) == null)
+        {
+            XMPPConnection conn = XMPPClient.globalInstance().getConnection();
+            Roster r = conn.getRoster();
+            RosterGroup rg = r.createGroup(group);
+            ContactGroup cg = new ContactGroup(this, group);
+            groups.add(cg);
+            fireTreeReload(true);
+            return true;
+        }
+        return false;
+    }
+    
+    public static boolean createNewContact( String JID, String nickname, String group)
+    {
+        XMPPConnection conn = XMPPClient.globalInstance().getConnection();
+        Roster r = conn.getRoster();
+        // empty JID is just nonsense
+        String realJID = JID.trim();
+        if(realJID.isEmpty())
+        {
+            return false;
+        }
+        // if the nick is empty (or empty-ish), make it really empty
+        String realNick = nickname.trim();
+        if(realNick.isEmpty())
+        {
+            realNick = null;
+        }
+        String[] useGroups;
+        if(group != null)
+        {
+            String realGroup = group.trim();
+            if(!realGroup.isEmpty())
+            {
+                useGroups = new String[1];
+                useGroups[0] = realGroup;
+            }
+            else
+            {
+                useGroups = new String[0];
+            }
+        }
+        else useGroups = new String[0];
+        try {
+            r.createEntry(realJID, realNick, useGroups);
+        } catch (XMPPException ex) {
+            // errors get caught and chewed out
+            return false;
+        }
+        return true;
+    }
+    
+    public static boolean deleteContact( Contact c)
+    {
+        XMPPConnection conn = XMPPClient.globalInstance().getConnection();
+        Roster r = conn.getRoster();
+        RosterEntry re = r.getEntry(c.getJID());
+        if(re == null)
+            return false;
+        try {
+            r.removeEntry(re);
+            return true;
+        } catch (XMPPException | IllegalStateException e) {
+            Logger.getLogger(ContactManager.class.getName()).log(Level.WARNING, null, e);
+            return false;
+        }
+    }
+    
     public synchronized Contact getContact(String otherJID) {
         for(Contact c: contacts)
         {
@@ -312,6 +429,8 @@ public class ContactManager implements TreeModel, RosterListener, ClConnectionLi
     }
     public synchronized ContactGroup getGroup (String name)
     {
+        if(name == null)
+            return null;
         for(ContactGroup g: groups)
         {
             if(g.getName().equals(name))
@@ -320,5 +439,56 @@ public class ContactManager implements TreeModel, RosterListener, ClConnectionLi
             }
         }
         return null;
+    }
+
+    // This is the model part for the group combo boxes
+    
+    protected synchronized void fireGroupsChanged()
+    {
+        ListDataEvent e = new ListDataEvent(this, ListDataEvent.CONTENTS_CHANGED, 0, getSize());
+
+        for (Iterator it = groupListenerList.iterator(); it.hasNext();)
+        {
+            ListDataListener ldl = (ListDataListener)it.next();
+            ldl.contentsChanged(e);
+        }
+    }
+    
+    @Override
+    public void setSelectedItem(Object anItem) {
+        if(anItem == null)
+        {
+            selectedGroupName = null;
+            return;
+        }
+        ContactGroup cg = (ContactGroup) anItem;
+        selectedGroupName = cg.getName();
+    }
+
+    @Override
+    public Object getSelectedItem() {
+        return getGroup(selectedGroupName);
+    }
+
+    @Override
+    public int getSize() {
+        return groups.size();
+    }
+
+    @Override
+    public ContactGroup getElementAt(int index) {
+        return groups.get(index);
+    }
+
+    @Override
+    public void addListDataListener(ListDataListener l) {
+        if(groupListenerList.contains(l))
+            return;
+        groupListenerList.add(l);
+    }
+
+    @Override
+    public void removeListDataListener(ListDataListener l) {
+        groupListenerList.remove(l);
     }
 }

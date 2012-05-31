@@ -6,6 +6,7 @@ package org.dethware.xmpp.client;
 
 import org.jivesoftware.smack.RosterEntry;
 import org.jivesoftware.smack.packet.Presence;
+import org.jivesoftware.smack.packet.Presence.Type;
 import org.jivesoftware.smack.packet.RosterPacket;
 
 /**

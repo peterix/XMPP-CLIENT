@@ -7,6 +7,8 @@ package org.dethware.xmpp.client;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import org.jivesoftware.smack.*;
+import org.jivesoftware.smack.filter.PacketFilter;
+import org.jivesoftware.smack.packet.Packet;
 import org.jivesoftware.smack.packet.Presence;
 
 /**
@@ -90,9 +92,12 @@ public class ConnectionManager implements ConnectionListener, SettingsListener
         if(!settings.isUsePLAIN())
             config.setSASLAuthenticationEnabled(true);
         
+        Roster.setDefaultSubscriptionMode(Roster.SubscriptionMode.manual);
+        
         //config.setCompressionEnabled(false);
         connection = new XMPPConnection(config);
     }
+    
     // low level 'connect' method
     // establishes a connection and logs in
     private boolean connect()
@@ -101,6 +106,29 @@ public class ConnectionManager implements ConnectionListener, SettingsListener
         XMPPClient cl = XMPPClient.globalInstance();
         AppSettings settings = cl.settings;
         Roster r = connection.getRoster();
+        
+        r.setSubscriptionMode(Roster.SubscriptionMode.manual);
+        connection.addPacketListener(
+            cl.sub_manager,
+            new PacketFilter(){
+                @Override
+                public boolean accept(Packet packet) {
+
+                    if(packet instanceof Presence)
+                    {
+                        Presence presence = (Presence)packet; 
+                        if(presence.getType().equals(Presence.Type.subscribed) 
+                                || presence.getType().equals(Presence.Type.subscribe)
+                                || presence.getType().equals(Presence.Type.unsubscribed) 
+                                || presence.getType().equals(Presence.Type.unsubscribe) )
+                        {
+                            System.out.println("packet: " + packet);
+                            return true;
+                        }
+                    } 
+                    return false;
+                }
+            });
         r.addRosterListener(cl.contacts_model);
         connection.getChatManager().addChatListener(cl.conversationFactory);
         try

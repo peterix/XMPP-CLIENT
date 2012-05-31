@@ -22,7 +22,8 @@ public class XMPPClient
         settings.loadFromFile();
         
         contacts_model = new ContactManager();
-
+        sub_manager = new SubscriptionListener();
+        
         conn_man = new ConnectionManager();
         conn_man.addClConListener(contacts_model);
         settings.AddListener(conn_man);
@@ -47,6 +48,7 @@ public class XMPPClient
     public ContactManager contacts_model;
     public ConversationFactory conversationFactory;
     public SoundUtils soundUtils;
+    public SubscriptionListener sub_manager;
     private MainWindow mainWindow = null;
     
     private synchronized void setMainWindow(MainWindow w)
