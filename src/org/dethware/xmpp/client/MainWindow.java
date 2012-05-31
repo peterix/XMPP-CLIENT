@@ -8,7 +8,10 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import javax.swing.*;
+import javax.swing.ImageIcon;
+import javax.swing.JFrame;
+import javax.swing.JOptionPane;
+import javax.swing.ToolTipManager;
 import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
 import javax.swing.tree.TreePath;
@@ -43,10 +46,12 @@ public class MainWindow extends javax.swing.JFrame implements ClConnectionListen
                 if(o instanceof Contact)
                 {
                     removeContact.setEnabled(true);
+                    historyView.setEnabled(true);
                 }
                 else
                 {
                     removeContact.setEnabled(false);
+                    historyView.setEnabled(false);
                 }
             }
         });
@@ -123,6 +128,7 @@ public class MainWindow extends javax.swing.JFrame implements ClConnectionListen
         openAddGroup = new javax.swing.JButton();
         openAddUser = new javax.swing.JButton();
         removeContact = new javax.swing.JButton();
+        historyView = new javax.swing.JButton();
         expandButton = new javax.swing.JButton();
         jScrollPane2 = new javax.swing.JScrollPane();
         ContactList = new org.dethware.xmpp.client.BetterJTree();
@@ -188,6 +194,20 @@ public class MainWindow extends javax.swing.JFrame implements ClConnectionListen
             }
         });
         jToolBar2.add(removeContact);
+
+        historyView.setIcon(new javax.swing.ImageIcon(getClass().getResource("/org/dethware/xmpp/client/view-history.png"))); // NOI18N
+        historyView.setToolTipText("View conversation history");
+        historyView.setBorder(new javax.swing.border.SoftBevelBorder(javax.swing.border.BevelBorder.RAISED));
+        historyView.setEnabled(false);
+        historyView.setFocusable(false);
+        historyView.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+        historyView.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
+        historyView.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                historyViewActionPerformed(evt);
+            }
+        });
+        jToolBar2.add(historyView);
 
         expandButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/org/dethware/xmpp/client/layer-visible-on.png"))); // NOI18N
         expandButton.setToolTipText("Expand all groups");
@@ -344,10 +364,22 @@ public class MainWindow extends javax.swing.JFrame implements ClConnectionListen
         }
     }//GEN-LAST:event_removeContactActionPerformed
 
+    private void historyViewActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_historyViewActionPerformed
+                Object o = ContactList.getLastSelectedPathComponent();
+        if(o instanceof Contact)
+        {
+            Contact c = (Contact) o;
+            Conversation conv = c.getConversation();
+            HistoryWindow wnd = new HistoryWindow(conv);
+            wnd.setVisible(true);
+        }
+    }//GEN-LAST:event_historyViewActionPerformed
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private org.dethware.xmpp.client.BetterJTree ContactList;
     private javax.swing.JTextField connectionBox;
     private javax.swing.JButton expandButton;
+    private javax.swing.JButton historyView;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JToolBar jToolBar2;

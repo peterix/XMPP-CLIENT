@@ -75,6 +75,11 @@ public class Conversation implements MessageListener, Comparable<Conversation> {
         return Messages.subList(start, Messages.size());
     }
     
+    public List<ConversationEntry> acquireHistory()
+    {
+        return Messages.subList(0, numHistorical);
+    }
+    
     public void markAllMessagesAsHistory()
     {
         for(ConversationEntry ce: Messages)
